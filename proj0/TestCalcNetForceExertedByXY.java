@@ -60,20 +60,20 @@ public class TestCalcNetForceExertedByXY {
         Body b3 = new Body(4.0, 5.0, 3.0, 4.0, 5.0, "jupiter.gif");
         Body b4 = new Body(3.0, 2.0, 3.0, 4.0, 5.0, "jupiter.gif");
 
-        Body[] bodies = {b2, b3, b4};
+        Body[] Bodies = {b2, b3, b4};
 
-        double xNetForce = b1.calcNetForceExertedByX(bodies);
-        double yNetForce = b1.calcNetForceExertedByY(bodies);
+        double xNetForce = b1.calcNetForceExertedByX(Bodies);
+        double yNetForce = b1.calcNetForceExertedByY(Bodies);
 
         checkEquals(133.4, round(xNetForce, 2), "calcNetForceExertedByX()");
         checkEquals(0.0, round(yNetForce, 2), "calcNetForceExertedByY()");
 
         System.out.println("Running test again, but with array that contains the target planet.");
 
-        bodies = new Body[]{b1, b2, b3, b4};
+        Bodies = new Body[]{b1, b2, b3, b4};
 
-        xNetForce = b1.calcNetForceExertedByX(bodies);
-        yNetForce = b1.calcNetForceExertedByY(bodies);
+        xNetForce = b1.calcNetForceExertedByX(Bodies);
+        yNetForce = b1.calcNetForceExertedByY(Bodies);
 
         checkEquals(133.4, round(xNetForce, 2), "calcNetForceExertedByX()");
         checkEquals(0.0, round(yNetForce, 2), "calcNetForceExertedByY()");

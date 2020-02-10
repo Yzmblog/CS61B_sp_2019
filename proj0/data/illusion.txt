@@ -21,7 +21,7 @@
 // This is a good test case for seeing if the positions are being updated
 // properly.
 // If there is one big force loop (i.e., program updates position
-// before computing all the new forces) the bodies will fly off 
+// before computing all the new forces) the Bodies will fly off
 // very quickly.
 // If everything is correct, the scenario will play out (four suns
 // emerge from center, suns and planets dance around until suns exit,
