@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.PriorityQueue;
 
 /**
  * Solver for the Flight problem (#9) from CS 61B Spring 2018 Midterm 2.
@@ -6,15 +8,47 @@ import java.util.ArrayList;
  * If a flight starts at the same time as a flight's end time, they are
  * considered to be in the air at the same time.
  */
+
+/**
+ * use min priority queue to solve, if minstart<=minend leijia, or jiandiaominend.
+ */
 public class FlightSolver {
+
+    private int maxNumPeople = 0;
 
     public FlightSolver(ArrayList<Flight> flights) {
         /* FIX ME */
+        PriorityQueue<Flight> startMinPQ = new PriorityQueue<>(new Comparator<Flight>() {
+            @Override
+            public int compare(Flight o1, Flight o2) {
+                return Integer.compare(o1.startTime(), o2.startTime());
+            }
+        });
+
+        PriorityQueue<Flight> endMinPQ = new PriorityQueue<>(new Comparator<Flight>() {
+            @Override
+            public int compare(Flight o1, Flight o2) {
+                return Integer.compare(o1.endTime(), o2.endTime());
+            }
+        });
+
+        startMinPQ.addAll(flights);
+        endMinPQ.addAll(flights);
+
+        int total = 0;
+        while (startMinPQ.size() != 0) {
+            if (startMinPQ.peek().startTime() <= endMinPQ.peek().endTime()) {
+                total += startMinPQ.poll().passengers();
+                maxNumPeople = Math.max(total, maxNumPeople);
+            } else {
+                total -= endMinPQ.poll().passengers();
+            }
+        }
     }
 
     public int solve() {
         /* FIX ME */
-        return -1;
+        return maxNumPeople;
     }
 
 }

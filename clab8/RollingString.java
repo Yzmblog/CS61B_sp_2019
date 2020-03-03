@@ -1,9 +1,14 @@
+import java.util.LinkedList;
+import java.util.Queue;
+
 /**
  * A String-like class that allows users to add and remove characters in the String
  * in constant time and have a constant-time hash function. Used for the Rabin-Karp
  * string-matching algorithm.
  */
 class RollingString{
+
+    private Queue<Character> rollQueue;
 
     /**
      * Number of total possible int values a character can take on.
@@ -24,6 +29,10 @@ class RollingString{
     public RollingString(String s, int length) {
         assert(s.length() == length);
         /* FIX ME */
+        rollQueue = new LinkedList<>();
+        for (char c : s.toCharArray()) {
+            rollQueue.offer(c);
+        }
     }
 
     /**
@@ -33,6 +42,8 @@ class RollingString{
      */
     public void addChar(char c) {
         /* FIX ME */
+        rollQueue.offer(c);
+        rollQueue.poll();
     }
 
 
@@ -44,7 +55,10 @@ class RollingString{
     public String toString() {
         StringBuilder strb = new StringBuilder();
         /* FIX ME */
-        return "";
+        for (char c : rollQueue) {
+            strb.append(c);
+        }
+        return strb.toString();
     }
 
     /**
@@ -53,7 +67,7 @@ class RollingString{
      */
     public int length() {
         /* FIX ME */
-        return -1;
+        return rollQueue.size();
     }
 
 
@@ -65,7 +79,7 @@ class RollingString{
     @Override
     public boolean equals(Object o) {
         /* FIX ME */
-        return false;
+        return this.toString().equals(o.toString());
     }
 
     /**
@@ -75,6 +89,10 @@ class RollingString{
     @Override
     public int hashCode() {
         /* FIX ME */
-        return -1;
+        int hash = 0;
+        for (char c : rollQueue) {
+            hash = (hash * UNIQUECHARS + (int) c) % PRIMEBASE;
+        }
+        return hash;
     }
 }
