@@ -54,6 +54,19 @@ public class TestMyTrieSet {
         }
     }
 
+    @Test
+    public void testLongest() {
+        String[] saStrings = new String[]{"same", "sam", "sad", "sap"};
+
+        MyTrieSet t = new MyTrieSet();
+        for (String s: saStrings) {
+            t.add(s);
+        }
+
+        assertEquals("sam", t.longestPrefixOf("samp"));
+
+    }
+
     public static void main(String[] args) {
         jh61b.junit.TestRunner.runTests(TestMyTrieSet.class);
     }
