@@ -24,7 +24,34 @@ public class SeparableEnemySolver {
      */
     public boolean isSeparable() {
         // TODO: Fix me
-        return false;
+        HashMap<String, Integer> SeparatedMap = new HashMap<String, Integer>();
+        for (String label : g.labels()) {
+            if (!SeparatedMap.containsKey(label)) {
+                if (!isSepar(label, label, SeparatedMap, 1)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isSepar(String label, String parent, HashMap<String, Integer> SeparatedMap, int direction) {
+        if (SeparatedMap.containsKey(label)) {
+            return SeparatedMap.get(label) == direction;
+        }
+
+        SeparatedMap.put(label, direction);
+
+        for (String neighbor : g.neighbors(label)) {
+            if (!neighbor.equals(parent)) {
+                if (!isSepar(neighbor, label, SeparatedMap, -1 * direction)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
 

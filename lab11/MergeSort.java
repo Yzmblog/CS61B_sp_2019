@@ -42,8 +42,14 @@ public class MergeSort {
      */
     private static <Item extends Comparable> Queue<Queue<Item>>
             makeSingleItemQueues(Queue<Item> items) {
-        // Your code here!
-        return null;
+        Queue<Queue<Item>> ItemQueue = new Queue<Queue<Item>>();
+
+        for (Item item : items) {
+            Queue<Item> QueuetoAdd = new Queue<>();
+            QueuetoAdd.enqueue(item);
+            ItemQueue.enqueue(QueuetoAdd);
+        }
+        return ItemQueue;
     }
 
     /**
@@ -61,8 +67,23 @@ public class MergeSort {
      */
     private static <Item extends Comparable> Queue<Item> mergeSortedQueues(
             Queue<Item> q1, Queue<Item> q2) {
-        // Your code here!
-        return null;
+        Item min;
+        Queue<Item> SortedQueue = new Queue<>();
+        while (!q1.isEmpty() && !q2.isEmpty()) {
+            min = getMin(q1, q2);
+            SortedQueue.enqueue(min);
+        }
+        if (!q1.isEmpty()) {
+            while (!q1.isEmpty()) {
+                SortedQueue.enqueue(q1.dequeue());
+            }
+        } else if (!q2.isEmpty()) {
+            while (!q2.isEmpty()) {
+                SortedQueue.enqueue(q2.dequeue());
+            }
+        }
+
+        return SortedQueue;
     }
 
     /**
@@ -77,7 +98,24 @@ public class MergeSort {
      */
     public static <Item extends Comparable> Queue<Item> mergeSort(
             Queue<Item> items) {
-        // Your code here!
+        Queue<Queue<Item>> QinQ = new Queue<>();
+        QinQ = makeSingleItemQueues(items);
+        items = SorteHelp(QinQ);
         return items;
+    }
+
+    private static <Item extends Comparable> Queue<Item> SorteHelp
+            (Queue<Queue<Item>> QinQ) {
+        if (QinQ.size() == 1) {
+            return QinQ.dequeue();
+        } else if (QinQ.size() == 2) {
+            return mergeSortedQueues(QinQ.dequeue(), QinQ.dequeue());
+        } else {
+            Queue<Queue<Item>> QoneQ = new Queue<>();
+            QoneQ.enqueue(QinQ.dequeue());
+            return mergeSortedQueues(SorteHelp(QoneQ), SorteHelp(QinQ));
+        }
+
+
     }
 }
