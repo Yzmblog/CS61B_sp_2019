@@ -17,8 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static bearmaps.proj2c.utils.Constants.SEMANTIC_STREET_GRAPH;
-import static bearmaps.proj2c.utils.Constants.ROUTE_LIST;
+import static bearmaps.proj2c.utils.Constants.*;
 
 /**
  * Handles requests from the web browser for map images. These images
@@ -87,9 +86,143 @@ public class RasterAPIHandler extends APIRouteHandler<Map<String, Double>, Map<S
         //System.out.println("yo, wanna know the parameters given by the web browser? They are:");
         //System.out.println(requestParams);
         Map<String, Object> results = new HashMap<>();
-        System.out.println("Since you haven't implemented RasterAPIHandler.processRequest, nothing is displayed in "
-                + "your browser.");
+        String[][] renderGrid;
+        double rasterULLon;
+        double rasterULLat;
+        double rasterLRLon;
+        double rasterLRLat;
+        int depth;
+        boolean querySuccess = true;
+
+        double requestULLon = requestParams.get("ullon");
+        double requestULLat = requestParams.get("ullat");
+        double requestLRLon = requestParams.get("lrlon");
+        double requestLRLat = requestParams.get("lrlat");
+        double requestWidth = requestParams.get("w");
+        double requestHeight = requestParams.get("h");
+
+        // Request grid out of range.
+        if (Double.compare(requestULLon, ROOT_LRLON) > 0
+                || Double.compare(requestULLat, ROOT_LRLAT) < 0
+                || Double.compare(requestLRLon, ROOT_ULLON) < 0
+                || Double.compare(requestLRLat, ROOT_ULLAT) > 0
+        ) {
+            querySuccess = false;
+        }
+
+
+        if (Double.compare(requestULLon, requestLRLon) > 0
+                || Double.compare(requestULLat, requestLRLat) < 0) {
+            querySuccess = false;
+        }
+
+        results.put("query_success", querySuccess);
+
+        double requestLonDPP = (requestLRLon - requestULLon) / requestWidth;
+        depth = calcOptimalDepth(requestLonDPP);
+        results.put("depth", depth);
+
+        // Find the rastered parameters.
+        int rasterULLonNum = calcRasteredParamNum(depth, requestULLon, ROOT_ULLON, ROOT_LRLON, true);
+        rasterULLon = calcRasteredParam(depth, rasterULLonNum, ROOT_ULLON, ROOT_LRLON, true ,true);
+        results.put("raster_ul_lon", rasterULLon);
+
+        int rasterULLatNum = calcRasteredParamNum(depth, requestULLat, ROOT_ULLAT, ROOT_LRLAT, true);
+        rasterULLat = calcRasteredParam(depth, rasterULLatNum, ROOT_ULLAT, ROOT_LRLAT, true, false);
+        results.put("raster_ul_lat", rasterULLat);
+
+        int rasterLRLonNum = calcRasteredParamNum(depth, requestLRLon, ROOT_ULLON, ROOT_LRLON, false);
+        rasterLRLon = calcRasteredParam(depth, rasterLRLonNum, ROOT_ULLON, ROOT_LRLON, false, true);
+        results.put("raster_lr_lon", rasterLRLon);
+
+        int rasterLRLatNum = calcRasteredParamNum(depth, requestLRLat, ROOT_ULLAT, ROOT_LRLAT, false);
+        rasterLRLat = calcRasteredParam(depth, rasterLRLatNum, ROOT_ULLAT, ROOT_LRLAT, false, false);
+        results.put("raster_lr_lat", rasterLRLat);
+
+
+        // Add 1 here because the LRNum is underestimated 1 in the previous
+        // calcRasteredParamNum in order to correspond to image number.
+        int rowNum = rasterLRLatNum - rasterULLatNum + 1;
+        int colNum = rasterLRLonNum - rasterULLonNum + 1;
+        renderGrid = new String[rowNum][colNum];
+        for (int i = 0; i < rowNum; i += 1) {
+            for (int j = 0; j < colNum; j += 1) {
+                renderGrid[i][j] = "d" + depth + "_x" + (j + rasterULLonNum) + "_y" + (i + rasterULLatNum) + ".png";
+            }
+        }
+
+        results.put("render_grid", renderGrid);
+
         return results;
+    }
+
+    private int calcOptimalDepth(double requestLonDPP) {
+        double baseLonDPP = (ROOT_LRLON - ROOT_ULLON) / TILE_SIZE;
+
+        int optimalDepth = (int) Math.ceil((Math.log(requestLonDPP / baseLonDPP) / Math.log(0.5)));
+        if (optimalDepth < 7) {
+            return optimalDepth;
+        }
+
+        return 7;
+    }
+
+    /**
+     * Calculate the corresponding grid number of the rastered parameter.
+     */
+    private int calcRasteredParamNum(int depth, double requestParam, double rootUL, double rootLR, boolean isUL) {
+        int bound = (int) (Math.pow(2, depth) - 1);
+
+        // Calculate the specific size (width or height) of each tile in current depth.
+        double tileSize = Math.abs(rootUL - rootLR) / (bound + 1);
+
+        // Always find the difference relative to the root upper left corner.
+        double temp = Math.abs(requestParam - rootUL) / tileSize;
+
+        // Round down the temp, because the number of image counting from zero.
+        int rasteredParamNum = (int) Math.floor(temp);
+
+        // If num larger than the bound num, set it to bound num.
+        // If num smaller than 0, set it to 0;
+        if (rasteredParamNum > bound) {
+            rasteredParamNum = bound;
+        } else if (rasteredParamNum < 0) {
+            rasteredParamNum = 0;
+        }
+
+        return rasteredParamNum;
+    }
+
+    /**
+     * Calculate the rastered parameter.
+     */
+    private double calcRasteredParam(int depth, int rasteredParamNum, double rootUL, double rootLR, boolean isUL, boolean isLon) {
+        int bound = (int) (Math.pow(2, depth) - 1);
+
+        // Calculate the specific size (width or height) of each tile in current depth.
+        double tileSize = Math.abs(rootUL - rootLR) / (bound + 1);
+        double rasteredParam;
+
+        // Always add(minus) from the upper(left) corner's Lon or Lat.
+        if (isUL) {
+            if (isLon) {
+                rasteredParam = rootUL + rasteredParamNum * tileSize;
+            } else {
+                rasteredParam = rootUL - rasteredParamNum * tileSize;
+            }
+
+            // If calculate lower right coordinates, the rasteredParamNum
+            // needs to plus 1, because for each tile, the right(lower) side
+            // is 1 tileSize away from the left(upper) side.
+        } else {
+            if (isLon) {
+                rasteredParam = rootUL + (rasteredParamNum + 1) * tileSize;
+            } else {
+                rasteredParam = rootUL - (rasteredParamNum + 1) * tileSize;
+            }
+        }
+
+        return rasteredParam;
     }
 
     @Override
